@@ -8,7 +8,8 @@ import "../src/FoundryToken.sol";
 contract FoundryTokenDeploy is Script {
     function run() external returns (FoundryToken) {
         uint256 initialSupply = 1000000 * 10 ** 18; // 1 million tokens with 18 decimals
-        vm.startBroadcast();
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(deployerPrivateKey);
         FoundryToken foundryToken = new FoundryToken("Foundry Token", "FRY", initialSupply);
         vm.stopBroadcast();
         return foundryToken;

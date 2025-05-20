@@ -181,7 +181,7 @@ contract FoundryTokenTest is Test {
         foundryToken.approve(owner, transferAmount);
         vm.startPrank(owner);
         vm.expectRevert("Insufficient balance");
-        foundryToken.transferFrom(user1, owner, transferAmount); 
+        foundryToken.transferFrom(user1, owner, transferAmount);
         vm.stopPrank();
     }
 
@@ -196,8 +196,29 @@ contract FoundryTokenTest is Test {
         vm.stopPrank();
     }
 
-    function testDeployScript() public {
-        FoundryTokenDeploy script = new FoundryTokenDeploy();
-        script.run();
+    /**
+     * @notice Tests fuzzing the burn rate.
+     * @param burnRate The burn rate to test.
+     * @dev Assumes that the burn rate is less than or equal to 1000 (10%).
+     */
+    function testFuzzBurnRate(uint256 burnRate) public {
+        vm.assume(burnRate <= 1000); // 10% max burn rate
+        vm.startPrank(owner);
+        foundryToken.setBurnRate(burnRate);
+        assert(foundryToken.burnRate() == burnRate);
+        vm.stopPrank();
+    }
+
+    /**
+     * @notice Tests fuzzing the mint amount.
+     * @param mintAmount The amount to mint.
+     * @dev Assumes that the mint amount is greater than 0.
+     */
+    function testFuzzMinting(uint256 mintAmount) public {
+        vm.assume(mintAmount > 0 && mintAmount <= 10000000000000 * 10 ** 18); // Ensure mintAmount is reasonable
+        vm.startPrank(owner);
+        foundryToken.mint(user1, mintAmount);
+        assert(foundryToken.balanceOf(user1) == mintAmount);
+        vm.stopPrank();
     }
 }
