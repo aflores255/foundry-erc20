@@ -4,11 +4,13 @@ pragma solidity ^0.8.28;
 
 import "forge-std/Test.sol";
 import "../src/FoundryToken.sol";
+import "../script/FoundryTokenDeploy.s.sol";
 
 contract FoundryTokenTest is Test {
     FoundryToken public foundryToken;
     address public owner = vm.addr(1);
     address public user1 = vm.addr(2);
+    address public user2 = vm.addr(3);
     string public name = "Foundry Token";
     string public symbol = "FRY";
     uint256 public initialSupply = 1000000 * 10 ** 18; // 1 million tokens with 18 decimals
@@ -97,15 +99,14 @@ contract FoundryTokenTest is Test {
         uint256 mintAmount = 1000 * 10 ** 18; // 1000 tokens
         vm.startPrank(owner);
         vm.expectRevert("Cannot mint to zero address");
-        foundryToken.mint(address(0), mintAmount); 
+        foundryToken.mint(address(0), mintAmount);
         vm.stopPrank();
     }
 
     /**
      * @notice Tests the transfer function with burn rate.
      */
-
-     function testTransferWithBurnRate() public {
+    function testTransferWithBurnRate() public {
         uint256 transferAmount = 1000 * 10 ** 18; // 1000 tokens
         uint256 burnRate = 100; // 1%
         vm.startPrank(owner);
@@ -113,7 +114,7 @@ contract FoundryTokenTest is Test {
         uint256 burnAmount = (transferAmount * burnRate) / 10000; // Calculate the burn amount
         uint256 expectedBalanceSender = foundryToken.balanceOf(owner) - transferAmount - burnAmount;
         foundryToken.transfer(user1, transferAmount);
-               
+
         assert(foundryToken.balanceOf(user1) == transferAmount);
         assert(foundryToken.totalSupply() == initialSupply - burnAmount);
         assert(foundryToken.balanceOf(owner) == expectedBalanceSender);
@@ -141,14 +142,62 @@ contract FoundryTokenTest is Test {
         vm.stopPrank();
     }
 
+    /**
+     * @notice Tests that reverts the transfer if amount is not greater than zero.
+     */
     function testCannotTransferMinimumAmount() public {
-        uint256 transferAmount = 0; 
+        uint256 transferAmount = 0;
         vm.startPrank(owner);
         vm.expectRevert("Transfer amount must be greater than zero");
-        foundryToken.transfer(user1, transferAmount); // Attempt to transfer zero tokens
+        foundryToken.transfer(user1, transferAmount);
         vm.stopPrank();
     }
 
+    /**
+     * @notice Tests the transferFrom function with burn rate.
+     */
+    function testTransferFromWithBurnRate() public {
+        uint256 transferAmount = 1000 * 10 ** 18; // 1000 tokens
+        uint256 burnRate = 100; // 1%
+        vm.startPrank(owner);
+        foundryToken.setBurnRate(burnRate); // Set burn rate to 1%
+        uint256 burnAmount = (transferAmount * burnRate) / 10000; // Calculate the burn amount
+        uint256 expectedBalanceSender = foundryToken.balanceOf(owner) - transferAmount - burnAmount;
+        foundryToken.approve(owner, transferAmount);
+        foundryToken.transferFrom(owner, user1, transferAmount);
 
+        assert(foundryToken.balanceOf(user1) == transferAmount);
+        assert(foundryToken.totalSupply() == initialSupply - burnAmount);
+        assert(foundryToken.balanceOf(owner) == expectedBalanceSender);
+        vm.stopPrank();
+    }
 
+    /**
+     * @notice Tests that a user cannot transferFrom more tokens than they own.
+     */
+    function testCannotTransferFromMoreThanBalance() public {
+        uint256 transferAmount = 1000 * 10 ** 18; // 1000 tokens
+        vm.prank(user1);
+        foundryToken.approve(owner, transferAmount);
+        vm.startPrank(owner);
+        vm.expectRevert("Insufficient balance");
+        foundryToken.transferFrom(user1, owner, transferAmount); 
+        vm.stopPrank();
+    }
+
+    /**
+     * @notice Tests that a user cannot transferFrom less than the minimum amount.
+     */
+    function testCannotTransferFromMinimumAmount() public {
+        uint256 transferAmount = 0;
+        vm.startPrank(owner);
+        vm.expectRevert("Transfer amount must be greater than zero");
+        foundryToken.transferFrom(owner, user1, transferAmount);
+        vm.stopPrank();
+    }
+
+    function testDeployScript() public {
+        FoundryTokenDeploy script = new FoundryTokenDeploy();
+        script.run();
+    }
 }

@@ -71,7 +71,7 @@ contract FoundryToken is ERC20, Ownable {
         _spendAllowance(sender, msg.sender, amount);
         _transfer(sender, recipient, amount);
         _burn(sender, burnAmount); // Burn the calculated amount
-        
+
         return true;
     }
 }
