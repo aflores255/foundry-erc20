@@ -137,7 +137,7 @@ The contract achieves **full coverage** on lines, statements, and functions, wit
 
 | **File**                      | **% Lines**     | **% Statements** | **% Branches** | **% Functions** |
 |------------------------------|-----------------|------------------|----------------|-----------------|
-| `src/FoundryToken.sol`| 100.00% (28/28) | 100.00% (29/29)  | 90.00% (14/14)  | 100.00% (5/5)   |
+| `src/FoundryToken.sol`| 100.00% (28/28) | 100.00% (29/29)  | 100.00% (14/14)  | 100.00% (5/5)   |
 
 ---
 
